@@ -14,11 +14,11 @@ WORKDIR /src
 
 # Copier les dossiers Services/(dossier qui contient le fichier csproj) 
 # et Foundation/Events dans le répertoire /src.
-# COPY Services/Applicants.Api Services/Applicants.Api/
-# COPY Foundation/Events Foundation/Events/
+COPY Services/Applicants.Api Services/Applicants.Api/
+COPY Foundation/Events Foundation/Events/
 
-COPY ./Services/Applicants.Api /src/Services/Applicants.Api/
-COPY ./appscore/Foundation/Events /src/appscore/Foundation/Events/
+# COPY ./Services/Applicants.Api /src/Services/Applicants.Api/
+# COPY ./appscore/Foundation/Events /src/appscore/Foundation/Events/
 
 # Exécuter la commande "dotnet restore {nom_du_projet.csproj}"
 RUN dotnet restore "/src/Services/Applicants.Api/applicants.api.csproj"
