@@ -12,31 +12,28 @@ FROM mcr.microsoft.com/dotnet/core/sdk:2.1-stretch AS build
 # créer un répertoire /src.
 WORKDIR /src
 
-# Copier les dossiers Services/(dossier qui contient le fichier csproj) 
+# Copier les dossiers (dossier qui contient le fichier csproj) 
 # et Foundation/Events dans le répertoire /src.
-COPY Services/Applicants.Api Services/Applicants.Api/
-COPY Foundation/Events Foundation/Events/
-
-# COPY ./Services/Applicants.Api /src/Services/Applicants.Api/
-# COPY ./appscore/Foundation/Events /src/appscore/Foundation/Events/
+COPY Web Web/
+COPY Foundation/Http Foundation/Http/
 
 # Exécuter la commande "dotnet restore {nom_du_projet.csproj}"
-RUN dotnet restore "/src/Services/Applicants.Api/applicants.api.csproj"
+RUN dotnet restore "Web/Web.csproj"
 
 # Faites une copie intégrale
 COPY . .
 
 # Placez vous dans le dossier du projet (dossier qui contient le fichier csproj)
-WORKDIR "/src/Services/Applicants.Api"
+WORKDIR "/src/Web"
 
 # Exécuter commande "dotnet build "{nom_du_projet.csproj}" -c Release -o /app/build"
-RUN dotnet build "applicants.api.csproj" -c Release -o /app/build
+RUN dotnet build "Web.csproj" -c Release -o /app/build
 
 # Depuis l'image build vers une nouvelle image qui vous nomerez "publish"
 FROM build AS publish
 
 # éxécuter la commande "dotnet publish "{nom_du_projet.csproj}" -c Release -o /app/publish"
-RUN dotnet publish "applicants.api.csproj" -c Release -o /app/publish
+RUN dotnet publish "Web.csproj" -c Release -o /app/publish
 
 # Depuis l'image base vers une nouvelle image qui vous nomerez "final"
 FROM base AS final
@@ -48,6 +45,4 @@ WORKDIR /app
 COPY --from=publish /app/publish .
 
 # Exécuter le entrypoint suivant: ["dotnet", "{nom_du_projet.dll}"]
-ENTRYPOINT ["dotnet", "applicants.api.dll"]
-
-
+ENTRYPOINT ["dotnet", "Web.dll"]

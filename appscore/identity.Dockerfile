@@ -12,28 +12,28 @@ FROM mcr.microsoft.com/dotnet/core/sdk:2.1-stretch AS build
 # créer un répertoire /src.
 WORKDIR /src
 
-# Copier les dossiers (dossier qui contient le fichier csproj) 
+# Copier les dossiers Services/(dossier qui contient le fichier csproj) 
 # et Foundation/Events dans le répertoire /src.
-COPY "Web" "Web/"
-COPY "Foundation/Http" "Foundation/Http/"
+COPY Services/Identity.Api Services/Identity.Api/
+COPY Foundation/Events Foundation/Events/
 
 # Exécuter la commande "dotnet restore {nom_du_projet.csproj}"
-RUN dotnet restore "Web/Web.csproj"
+RUN dotnet restore "/src/Services/Identity.Api/Identity.Api.csproj"
 
 # Faites une copie intégrale
 COPY . .
 
 # Placez vous dans le dossier du projet (dossier qui contient le fichier csproj)
-WORKDIR "/src/Web"
+WORKDIR "/src/Services/Identity.Api"
 
 # Exécuter commande "dotnet build "{nom_du_projet.csproj}" -c Release -o /app/build"
-RUN dotnet build "Web.csproj" -c Release -o /app/build
+RUN dotnet build "Identity.Api.csproj" -c Release -o /app/build
 
 # Depuis l'image build vers une nouvelle image qui vous nomerez "publish"
 FROM build AS publish
 
 # éxécuter la commande "dotnet publish "{nom_du_projet.csproj}" -c Release -o /app/publish"
-RUN dotnet publish "Web.csproj" -c Release -o /app/publish
+RUN dotnet publish "Identity.Api.csproj" -c Release -o /app/publish
 
 # Depuis l'image base vers une nouvelle image qui vous nomerez "final"
 FROM base AS final
@@ -45,4 +45,4 @@ WORKDIR /app
 COPY --from=publish /app/publish .
 
 # Exécuter le entrypoint suivant: ["dotnet", "{nom_du_projet.dll}"]
-ENTRYPOINT ["dotnet", "Web.dll"]
+ENTRYPOINT ["dotnet", "identity.api.dll"]

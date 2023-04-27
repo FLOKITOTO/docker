@@ -14,8 +14,8 @@ WORKDIR /src
 
 # Copier les dossiers Services/(dossier qui contient le fichier csproj) 
 # et Foundation/Events dans le répertoire /src.
-COPY "Services/Jobs.Api" "Services/Jobs.Api/"
-COPY "Foundation/Events" "Foundation/Events/"
+COPY Services/Jobs.Api Services/Jobs.Api/
+COPY Foundation/Events Foundation/Events/
 
 # Exécuter la commande "dotnet restore {nom_du_projet.csproj}"
 RUN dotnet restore "Services/Jobs.Api/jobs.api.csproj"
