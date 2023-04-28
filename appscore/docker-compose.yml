@@ -2,32 +2,27 @@ version: '3.9'
 
 networks:
   user-net:
-    external: true
     name: "user-net"
 
   rabbit-net:
-    external: true
     name: "rabbit-net"
 
   sql-net:
-    external: true
     name: "sql-net"
+    external: false 
 
   web-net:
-    external: true
     name: "web-net"
+
 
 volumes:
   db-data:
 
 services:
 
-  #  - user-net
   user.data:
     image: redis
     container_name: user.data
-    ports:
-      - "6379:6379"
     networks:
       - user-net
    
@@ -38,81 +33,70 @@ services:
     container_name: sql.data
     networks:
       - sql-net
-    ports:
-      - "1433:1433"
     volumes:
       - ./volume-data:/var/opt/mssql/data
+  
   rabbitmq:
     image: rabbitmq:3-management
     container_name: rabbitmq
     ports:
       - "15672:15672"
-      - "5672:5672"
     networks:
       - rabbit-net
+    # surveillance
     healthcheck:
       test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      # intervalles 
       interval: 10s
+      # test ne répond pas 
       timeout: 5s
+      # 3 tentatives supplémentaires 
       retries: 3
  
-  # - user-net
-  # - rabbit-net
-  # - sql-net
-  # - web-net
   applicants.api:
     build:
       context: .
       dockerfile: ./applicants.Dockerfile
     container_name: applicants.api
+    # chaîne de connexion à une base de données.
+    # le nom d'hôte du service RabbitMQ
     environment:
       - ConnectionString=Server=sql.data;User=sa;Password=Pass@word;Database=dotnetgigs.applicants;
       - HostRabbitmq=rabbitmq
-    ports:
-      - "8081:80"
     networks:
       - user-net
       - rabbit-net
       - sql-net
       - web-net
     depends_on:
-      # - user.data
-      # - sql.data
       sql.data:
+        # être en cours d'exécution 
         condition: service_started
+        # Si "sql.data" fail
         restart: true
+      # rabbitmq" doit être sain
       rabbitmq:
         condition: service_healthy
       user.data:
         condition: service_started
-    links: 
-      - rabbitmq
     restart: on-failure:5
   
-   
-  # - user-net
-  # - rabbit-net
-  # - sql-net
-  # - web-net
   service-api-identity:
     build:
       context: .
       dockerfile: ./identity.Dockerfile
     container_name: identity.api
+    #  l'adresse IP et le port de l'hôte Redis 
     environment:
       - RedisHost=user.data:6379
       - HostRabbitmq=rabbitmq
-    ports:
-      - "8084:80"
     networks:
       - user-net
       - rabbit-net
       - sql-net
       - web-net
+      
     depends_on:
-      # - rabbitmq
-      # - user.data
-      # - sql.data
       sql.data:
         condition: service_started
         restart: true
@@ -120,20 +104,8 @@ services:
         condition: service_healthy
       user.data:
         condition: service_started
-    links: 
-      - rabbitmq
     restart: on-failure:5
-    # healthcheck:
-    #   test: ["CMD", "curl", "-f", "http://localhost:80/health"]
-    #   interval: 10s
-    #   timeout: 5s
-    #   retries: 3
-    #   start_period: 60s
-
-  # - user-net
-  # - rabbit-net
-  # - sql-net
-  # - web-net
+  
   service-api-jobs:
     build:
       context: .
@@ -142,17 +114,13 @@ services:
     environment:
       - ConnectionString=Server=sql.data;User=sa;Password=Pass@word;Database=dotnetgigs.jobs;
       - HostRabbitmq=rabbitmq
-    ports:
-      - "8083:80"
     networks:
       - user-net
       - rabbit-net
       - sql-net
       - web-net
+
     depends_on:
-      # - rabbitmq
-      # - user.data
-      # - sql.data
       sql.data:
         condition: service_started
         restart: true
@@ -160,21 +128,15 @@ services:
         condition: service_healthy
       user.data:
         condition: service_started      
-    links: 
-      - rabbitmq
     restart: on-failure:5
-    # healthcheck:
-    #   test: ["CMD", "curl", "-f", "http://localhost:80/health"]
-    #   interval: 10s
-    #   timeout: 5s
-    #   retries: 3
-    #   start_period: 60s
 
   web:
       build:
         context: .
         dockerfile: ./web.Dockerfile
       container_name: web
+
+      # l'URL de l'API 
       environment:
         - ApiSettings__IdentityApiUrl=http://service-api-identity
         - ApiSettings__JobsApiUrl=http://service-api-jobs

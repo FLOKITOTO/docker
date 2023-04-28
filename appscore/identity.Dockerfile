@@ -14,26 +14,29 @@ WORKDIR /src
 
 # Copier les dossiers Services/(dossier qui contient le fichier csproj) 
 # et Foundation/Events dans le répertoire /src.
-COPY Services/Identity.Api Services/Identity.Api/
-COPY Foundation/Events Foundation/Events/
+# COPY Services/Identity.Api Services/Identity.Api
+# COPY Foundation/Events Foundation/Events
+COPY "./Services/Identity.Api" "./Services/Identity.Api"
+COPY "./Foundation/Events" "./Foundation/Events"
 
 # Exécuter la commande "dotnet restore {nom_du_projet.csproj}"
-RUN dotnet restore "/src/Services/Identity.Api/Identity.Api.csproj"
+RUN dotnet restore "./Services/Identity.Api/identity.api.csproj"
 
 # Faites une copie intégrale
 COPY . .
 
 # Placez vous dans le dossier du projet (dossier qui contient le fichier csproj)
-WORKDIR "/src/Services/Identity.Api"
+WORKDIR /src/Services/Identity.Api
 
 # Exécuter commande "dotnet build "{nom_du_projet.csproj}" -c Release -o /app/build"
-RUN dotnet build "Identity.Api.csproj" -c Release -o /app/build
+RUN dotnet build "identity.api.csproj" -c Release -o /app/build
 
 # Depuis l'image build vers une nouvelle image qui vous nomerez "publish"
 FROM build AS publish
 
 # éxécuter la commande "dotnet publish "{nom_du_projet.csproj}" -c Release -o /app/publish"
-RUN dotnet publish "Identity.Api.csproj" -c Release -o /app/publish
+RUN dotnet publish "identity.api.csproj" -c Release -o /app/publish
+
 
 # Depuis l'image base vers une nouvelle image qui vous nomerez "final"
 FROM base AS final
